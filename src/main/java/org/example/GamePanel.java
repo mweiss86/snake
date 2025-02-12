@@ -10,7 +10,6 @@ import java.util.Random;
 
 public class GamePanel extends JPanel implements ActionListener {
 
-
     static final int SCREEN_WIDTH = 600;
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 25;
@@ -64,18 +63,17 @@ public class GamePanel extends JPanel implements ActionListener {
                 }
             }
             g.setColor(Color.red);
-            g.setFont( new Font("Ink Free",Font.BOLD,40));
+            g.setFont(new Font("Ink Free", Font.BOLD, 40));
             FontMetrics metrics = getFontMetrics(g.getFont());
-            g.drawString("Score: "+applesEaten,(SCREEN_WIDTH - metrics.stringWidth("Score: "+applesEaten))/2,g.getFont().getSize());
-        }
-        else {
+            g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Score: " + applesEaten)) / 2, g.getFont().getSize());
+        } else {
             gameOver(g);
         }
     }
 
     public void newApple() {
-        appleX = random.nextInt( (SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
-        appleY = random.nextInt( (SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
+        appleX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
+        appleY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
     }
 
     public void move() {
@@ -140,16 +138,15 @@ public class GamePanel extends JPanel implements ActionListener {
     public void gameOver(Graphics g) {
         // Score
         g.setColor(Color.red);
-        g.setFont( new Font("Ink Free",Font.BOLD,40));
+        g.setFont(new Font("Ink Free", Font.BOLD, 40));
         FontMetrics metrics1 = getFontMetrics(g.getFont());
-        g.drawString("Score: "+applesEaten,(SCREEN_WIDTH - metrics1.stringWidth("Score: "+applesEaten))/2,g.getFont().getSize());
+        g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics1.stringWidth("Score: " + applesEaten)) / 2, g.getFont().getSize());
         // GameOver text
         g.setColor(Color.red);
-        g.setFont( new Font("Ink Free",Font.BOLD,75));
+        g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metrics2 = getFontMetrics(g.getFont());
-        g.drawString("Game Over",(SCREEN_WIDTH - metrics2.stringWidth("Game Over"))/2,SCREEN_HEIGHT/2);
+        g.drawString("Game Over", (SCREEN_WIDTH - metrics2.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 2);
     }
-
 
     @Override
     public void actionPerformed(ActionEvent e) {
