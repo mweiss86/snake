@@ -6,9 +6,7 @@ import java.awt.*;
 //import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-//import java.time.Duration;
-//import java.time.Instant;
-//import java.time.temporal.TemporalUnit;
+import java.time.*;
 import java.util.Random;
 
 public class GamePanel extends JPanel {//implements ActionListener {
@@ -29,21 +27,22 @@ public class GamePanel extends JPanel {//implements ActionListener {
     //Timer timer;
     Random random;
 
-    GamePanel() {
+   public GamePanel() {
         random = new Random();
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         this.setBackground(Color.black);
         this.setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
-        startGame();
+        //startGame();
     }
 
 
     public void startGame() {
         newApple();
         running = true;
-       // timer = new Timer(DELAY, this);
+        //timer = new Timer(DELAY, this);
         //timer.start();
+
         runn();
 
     }
@@ -52,16 +51,16 @@ public class GamePanel extends JPanel {//implements ActionListener {
         try {
 
 
-            //Instant prev = Instant.now();
+            Instant prev = Instant.now();
             while (running) {
-               // Instant current = Instant.now();
-               // if (Duration.between(prev, current).getSeconds() > 0.5) {
+                Instant current = Instant.now();
+                if (Duration.between(prev, current).toMillis() > 75) {
                     move();
                     checkApple();
                     checkCollisions();
                     repaint();
-                    //prev = current;
-              //  }
+                    prev = current;
+                }
                 //  repaint();
             }
         } catch (Exception e) {
@@ -231,6 +230,7 @@ public class GamePanel extends JPanel {//implements ActionListener {
             x = new int[GAME_UNITS];
             y = new int[GAME_UNITS];
             startGame();
+
         }
     }
 }
