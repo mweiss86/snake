@@ -14,7 +14,6 @@ public class GamePanel extends JPanel {//implements ActionListener {
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 25;
     static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT) / UNIT_SIZE;
-    //static int DELAY = 75;
     int[] x = new int[GAME_UNITS];
     int[] y = new int[GAME_UNITS];
     int bodyParts = 6;
@@ -23,7 +22,6 @@ public class GamePanel extends JPanel {//implements ActionListener {
     int appleY;
     char direction = 'R';
     boolean running = false;
-    //Timer timer;
     Random random;
 
     public GamePanel() {
@@ -32,32 +30,26 @@ public class GamePanel extends JPanel {//implements ActionListener {
         this.setBackground(Color.black);
         this.setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
-        //startGame();
-
     }
-
 
     public void startGame() {
         newApple();
         running = true;
-        //timer = new Timer(DELAY, this);
-        //timer.start();
 
         Instant prev = Instant.now();
-        while (running) {
+        while (true) {
             Instant current = Instant.now();
 
             if (Duration.between(prev, current).toMillis() > 75) {
                 move();
                 checkApple();
                 checkCollisions();
-
                 prev = current;
             }
             repaint();
         }
-    }
 
+    }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -169,19 +161,6 @@ public class GamePanel extends JPanel {//implements ActionListener {
         g.drawString("Restart with Space", (SCREEN_WIDTH - metrics3.stringWidth("Restart with Space")) / 2, SCREEN_HEIGHT / 2 + 120);
     }
 
-/*
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (running) {
-            move();
-            checkApple();
-            checkCollisions();
-        }
-        repaint();
-    }
-*/
-
-
     public class MyKeyAdapter extends KeyAdapter {
         @Override
         public void keyPressed(KeyEvent e) {
@@ -210,6 +189,7 @@ public class GamePanel extends JPanel {//implements ActionListener {
                     if (!running) {
                         reset();
                     }
+                    break;
             }
         }
 
@@ -220,8 +200,7 @@ public class GamePanel extends JPanel {//implements ActionListener {
             random = new Random();
             x = new int[GAME_UNITS];
             y = new int[GAME_UNITS];
-            startGame();
-
+            running = true;
         }
     }
 }
