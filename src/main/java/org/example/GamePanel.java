@@ -8,13 +8,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;
 
-public class GamePanel extends JPanel {//implements ActionListener {
+
+//TODO Richtung erst in move ändern
+public class GamePanel extends JPanel {
 
     static final int SCREEN_WIDTH = 600;
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 25;
     static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT) / UNIT_SIZE;
-    //static int DELAY = 75;
     int[] x = new int[GAME_UNITS];
     int[] y = new int[GAME_UNITS];
     int bodyParts = 6;
@@ -23,7 +24,6 @@ public class GamePanel extends JPanel {//implements ActionListener {
     int appleY;
     char direction = 'R';
     boolean running = false;
-    //Timer timer;
     Random random;
 
     public GamePanel() {
@@ -32,32 +32,26 @@ public class GamePanel extends JPanel {//implements ActionListener {
         this.setBackground(Color.black);
         this.setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
-        //startGame();
-
+        this.setDoubleBuffered(true);
     }
-
 
     public void startGame() {
         newApple();
         running = true;
-        //timer = new Timer(DELAY, this);
-        //timer.start();
 
         Instant prev = Instant.now();
-        while (running) {
+        while (true) {
             Instant current = Instant.now();
 
             if (Duration.between(prev, current).toMillis() > 75) {
                 move();
                 checkApple();
                 checkCollisions();
-
                 prev = current;
             }
             repaint();
         }
     }
-
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -96,8 +90,8 @@ public class GamePanel extends JPanel {//implements ActionListener {
         for (int i = bodyParts; i > 0; i--) {
             x[i] = x[i - 1];
             y[i] = y[i - 1];
-
         }
+
         switch (direction) {
             case 'U':
                 y[0] = y[0] - UNIT_SIZE;
@@ -146,9 +140,6 @@ public class GamePanel extends JPanel {//implements ActionListener {
         if (y[0] >= SCREEN_HEIGHT) {
             running = false;
         }
-        /*if (!running) {
-             timer.stop();
-        }*/
     }
 
     public void gameOver(Graphics g) {
@@ -168,19 +159,6 @@ public class GamePanel extends JPanel {//implements ActionListener {
         FontMetrics metrics3 = getFontMetrics(g.getFont());
         g.drawString("Restart with Space", (SCREEN_WIDTH - metrics3.stringWidth("Restart with Space")) / 2, SCREEN_HEIGHT / 2 + 120);
     }
-
-/*
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (running) {
-            move();
-            checkApple();
-            checkCollisions();
-        }
-        repaint();
-    }
-*/
-
 
     public class MyKeyAdapter extends KeyAdapter {
         @Override
@@ -210,6 +188,7 @@ public class GamePanel extends JPanel {//implements ActionListener {
                     if (!running) {
                         reset();
                     }
+                    break;
             }
         }
 
@@ -220,8 +199,7 @@ public class GamePanel extends JPanel {//implements ActionListener {
             random = new Random();
             x = new int[GAME_UNITS];
             y = new int[GAME_UNITS];
-            startGame();
-
+            running = true;
         }
     }
 }
