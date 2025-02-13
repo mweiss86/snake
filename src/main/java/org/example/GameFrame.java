@@ -1,6 +1,7 @@
 package org.example;
 
 import javax.swing.*;
+import java.awt.*;
 
 
 public class GameFrame extends JFrame  {
@@ -14,5 +15,6 @@ public class GameFrame extends JFrame  {
         this.pack();
         this.setVisible(true);
         this.setLocationRelativeTo(null);
+
     }
 }

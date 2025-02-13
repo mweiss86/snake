@@ -2,28 +2,31 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+//import java.awt.event.ActionEvent;
+//import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+//import java.time.Duration;
+//import java.time.Instant;
+//import java.time.temporal.TemporalUnit;
 import java.util.Random;
 
-public class GamePanel extends JPanel implements ActionListener {
+public class GamePanel extends JPanel {//implements ActionListener {
 
     static final int SCREEN_WIDTH = 600;
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 25;
     static final int GAME_UNITS = (SCREEN_WIDTH * SCREEN_HEIGHT) / UNIT_SIZE;
-    static final int DELAY = 75;
+    //static int DELAY = 75;
     int[] x = new int[GAME_UNITS];
-     int[] y = new int[GAME_UNITS];
+    int[] y = new int[GAME_UNITS];
     int bodyParts = 6;
     int applesEaten;
     int appleX;
     int appleY;
     char direction = 'R';
     boolean running = false;
-    Timer timer;
+    //Timer timer;
     Random random;
 
     GamePanel() {
@@ -35,11 +38,35 @@ public class GamePanel extends JPanel implements ActionListener {
         startGame();
     }
 
+
     public void startGame() {
         newApple();
         running = true;
-        timer = new Timer(DELAY, this);
-        timer.start();
+       // timer = new Timer(DELAY, this);
+        //timer.start();
+        runn();
+
+    }
+
+    public void runn () {
+        try {
+
+
+            //Instant prev = Instant.now();
+            while (running) {
+               // Instant current = Instant.now();
+               // if (Duration.between(prev, current).getSeconds() > 0.5) {
+                    move();
+                    checkApple();
+                    checkCollisions();
+                    repaint();
+                    //prev = current;
+              //  }
+                //  repaint();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void paintComponent(Graphics g) {
@@ -129,9 +156,9 @@ public class GamePanel extends JPanel implements ActionListener {
         if (y[0] >= SCREEN_HEIGHT) {
             running = false;
         }
-        if (!running) {
-            timer.stop();
-        }
+        /*if (!running) {
+             timer.stop();
+        }*/
     }
 
     public void gameOver(Graphics g) {
@@ -139,19 +166,20 @@ public class GamePanel extends JPanel implements ActionListener {
         g.setColor(Color.red);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metrics1 = getFontMetrics(g.getFont());
-        g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics1.stringWidth("Score: " + applesEaten)) / 2, SCREEN_HEIGHT/2 +70);
+        g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics1.stringWidth("Score: " + applesEaten)) / 2, SCREEN_HEIGHT / 2 + 70);
         // GameOver text
         g.setColor(Color.red);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metrics2 = getFontMetrics(g.getFont());
-        g.drawString("Game Over", (SCREEN_WIDTH - metrics2.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 2-30);
+        g.drawString("Game Over", (SCREEN_WIDTH - metrics2.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 2 - 30);
         // Score
         g.setColor(Color.red);
         g.setFont(new Font("Ink Free", Font.BOLD, 20));
         FontMetrics metrics3 = getFontMetrics(g.getFont());
-        g.drawString("Restart with Space", (SCREEN_WIDTH - metrics3.stringWidth("Restart with Space")) / 2, SCREEN_HEIGHT/2 +120);
+        g.drawString("Restart with Space", (SCREEN_WIDTH - metrics3.stringWidth("Restart with Space")) / 2, SCREEN_HEIGHT / 2 + 120);
     }
 
+/*
     @Override
     public void actionPerformed(ActionEvent e) {
         if (running) {
@@ -161,6 +189,8 @@ public class GamePanel extends JPanel implements ActionListener {
         }
         repaint();
     }
+*/
+
 
     public class MyKeyAdapter extends KeyAdapter {
         @Override
@@ -187,13 +217,13 @@ public class GamePanel extends JPanel implements ActionListener {
                     }
                     break;
                 case KeyEvent.VK_SPACE:
-                    if (!running){
+                    if (!running) {
                         reset();
                     }
             }
         }
 
-        public void reset(){
+        public void reset() {
             bodyParts = 6;
             applesEaten = 0;
             direction = 'R';
