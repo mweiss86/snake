@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.Random;
 
 
-//TODO Richtung erst in move ändern
+//TODO Richtung erst in move aendern
 public class GamePanel extends JPanel {
 
     static final int SCREEN_WIDTH = 600;
