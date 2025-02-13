@@ -2,11 +2,10 @@ package org.example;
 
 import javax.swing.*;
 import java.awt.*;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.time.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Random;
 
 public class GamePanel extends JPanel {//implements ActionListener {
@@ -27,13 +26,14 @@ public class GamePanel extends JPanel {//implements ActionListener {
     //Timer timer;
     Random random;
 
-   public GamePanel() {
+    public GamePanel() {
         random = new Random();
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         this.setBackground(Color.black);
         this.setFocusable(true);
         this.addKeyListener(new MyKeyAdapter());
         //startGame();
+
     }
 
 
@@ -43,30 +43,21 @@ public class GamePanel extends JPanel {//implements ActionListener {
         //timer = new Timer(DELAY, this);
         //timer.start();
 
-        runn();
+        Instant prev = Instant.now();
+        while (running) {
+            Instant current = Instant.now();
 
-    }
+            if (Duration.between(prev, current).toMillis() > 75) {
+                move();
+                checkApple();
+                checkCollisions();
 
-    public void runn () {
-        try {
-
-
-            Instant prev = Instant.now();
-            while (running) {
-                Instant current = Instant.now();
-                if (Duration.between(prev, current).toMillis() > 75) {
-                    move();
-                    checkApple();
-                    checkCollisions();
-                    repaint();
-                    prev = current;
-                }
-                //  repaint();
+                prev = current;
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            repaint();
         }
     }
+
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
