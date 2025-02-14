@@ -5,7 +5,9 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Random;
-
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class GamePanel extends JPanel {
 
@@ -22,17 +24,20 @@ public class GamePanel extends JPanel {
     char direction = 'R';
     char newDirection = 'R';
     boolean running = false;
-    Random random;
-    static final int UPS = 10;         //Updates per second (game logic speed) - higher = faster | lower = slower
-    static final int FPS = 60;  // Frames per second (rendering speed)
+    Random random = new Random();
+
+    // Game speed control
+    static final int UPS = 10; //Updates per second (game logic speed) - higher = faster | lower = slower
+    static final int FPS = 60; // Frames per second (rendering speed)
     static final long UPDATE_INTERVAL = 1000 / UPS;        // Time per update in ms
     static final long FRAME_TIME = 1000 / FPS;      // Time per frame in ms
-    int fps = 0;    // Current FPS calue
-    int frameCount = 0;     // Counts frames
+    int fps;
+    int frameCount;
     long lastFpsUpdate = System.currentTimeMillis();
 
+    private ScheduledExecutorService executor;
+
     public GamePanel() {
-        random = new Random();
         this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
         this.setBackground(Color.black);
         this.setFocusable(true);
@@ -41,44 +46,32 @@ public class GamePanel extends JPanel {
     }
 
     public void startGame() {
-        newApple();
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdownNow(); // Stop any existing game loops
+        }
+
+        executor = Executors.newScheduledThreadPool(2);
+        reset();
         running = true;
 
-        long lastUpdate = System.currentTimeMillis();
-        long lastFrame = System.currentTimeMillis();
-
-        while (true) {
-            long currentTime = System.currentTimeMillis();
-
-            // Update Game Logic at UPS rate
-            if (currentTime - lastUpdate >= UPDATE_INTERVAL) {
-                move();
-                checkApple();
-                checkCollisions();
-                lastUpdate = currentTime;
-            }
-
-            // Render the Game at FPS rate
-            if (currentTime - lastFrame >= FRAME_TIME) {
-                repaint();
-                lastFrame = currentTime;
-            }
-
-            // Sleep tp reduce CPU usage
-            try {
-                Thread.sleep(1);            // Small sleep to prevent 100% CPU usage
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        executor.scheduleAtFixedRate(this::updateGame, 0, UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
+        executor.scheduleAtFixedRate(this::repaint, 0,FRAME_TIME, TimeUnit.MILLISECONDS);
     }
 
+    private void updateGame() {
+        if (!running) return;
+        move();
+        checkApple();
+        checkCollisions();
+    }
+
+    @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         draw(g);
     }
 
-    public void draw(Graphics g) {
+    private void draw(Graphics g) {
         if (running) {
             // Draw apple
             g.setColor(Color.red);
@@ -86,14 +79,10 @@ public class GamePanel extends JPanel {
 
             // Draw snake
             for (int i = 0; i < bodyParts; i++) {
-                if (i == 0) {
-                    g.setColor(Color.green);
-                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-                } else {
-                    g.setColor(new Color(45, 180, 0));
-                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-                }
+                g.setColor(i == 0 ? Color.green : new Color(45, 180, 0));
+                g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
             }
+
             // Draw score
             g.setColor(Color.red);
             g.setFont(new Font("Ink Free", Font.BOLD, 40));
@@ -103,155 +92,145 @@ public class GamePanel extends JPanel {
             // Draw FPS counter
             g.setColor(Color.white);
             g.setFont(new Font("Arial", Font.PLAIN, 20));
-            g.drawString("FPS :" + fps , 10, 15);       // Display in top-left corner
+            g.drawString("FPS: " + fps, 10, 20);
 
-            // Update FPS tracking
+            // Update FPS
             frameCount++;
-            if (System.currentTimeMillis() - lastFpsUpdate >= 1000){
-                fps = frameCount;   // Set FPS value
-                frameCount = 0;     // Reset count
-                lastFpsUpdate = System.currentTimeMillis(); // Reset timer
+            if (System.currentTimeMillis() - lastFpsUpdate >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = System.currentTimeMillis();
             }
         } else {
             gameOver(g);
         }
     }
 
-    public void newApple() {
+    private void newApple() {
         boolean validPosition;
-        do{
+        do {
             validPosition = true;
-            appleX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
-            appleY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
-
-            //check if new apple position overlaps with any part of the snake
-            for ( int i = 0; i < bodyParts; i++){
-                if ( x[i] == appleX && y[i] == appleY){
-                    validPosition = false;  // Apple is on the snake, regenerate
+            appleX = random.nextInt(SCREEN_WIDTH / UNIT_SIZE) * UNIT_SIZE;
+            appleY = random.nextInt(SCREEN_HEIGHT / UNIT_SIZE) * UNIT_SIZE;
+            // check if new apple position overlaps with any part of the snake
+            for (int i = 0; i < bodyParts; i++) {
+                if (x[i] == appleX && y[i] == appleY) {
+                    validPosition = false;  // Apple is on snake, regenerate
                     break;
                 }
             }
-        } while (!validPosition);   // Keep generating until a valid position is found
+        } while (!validPosition); // Keep generating until a valid position is found
     }
 
-    public void move() {
-        for (int i = bodyParts; i > 0; i--) {
-            x[i] = x[i - 1];
-            y[i] = y[i - 1];
-        }
-        if (direction != newDirection) {
+    private void move() {
+        // Update the new direction at the start of move
+        if(direction!=newDirection) {
             direction = newDirection;
         }
+        // Move body parts
+        System.arraycopy(x, 0, x, 1, bodyParts);
+        System.arraycopy(y, 0, y, 1, bodyParts);
+
+        // Move head
         switch (direction) {
             case 'U':
-                y[0] = y[0] - UNIT_SIZE;
+                y[0] -= UNIT_SIZE;
                 break;
             case 'D':
-                y[0] = y[0] + UNIT_SIZE;
+                y[0] += UNIT_SIZE;
                 break;
             case 'L':
-                x[0] = x[0] - UNIT_SIZE;
+                x[0] -= UNIT_SIZE;
                 break;
             case 'R':
-                x[0] = x[0] + UNIT_SIZE;
+                x[0] += UNIT_SIZE;
                 break;
         }
     }
 
-    public void checkApple() {
-        if ((x[0] == appleX) && (y[0] == appleY)) {
+    private void checkApple() {
+        if (x[0] == appleX && y[0] == appleY) {
             bodyParts++;
             applesEaten++;
             newApple();
         }
     }
 
-    public void checkCollisions() {
+    private void checkCollisions() {
         // checks if head collide with body
-        for (int i = bodyParts; i > 0; i--) {
-            if ((x[0] == x[i]) && (y[0] == y[i])) {
+        for (int i = 1; i < bodyParts; i++) {
+            if (x[0] == x[i] && y[0] == y[i]) {
                 running = false;
-                break;
+                return;
             }
         }
-        // check if head touches left border
-        if (x[0] < 0) {
-            running = false;
-        }
-        // check if head touches right border
-        if (x[0] >= SCREEN_WIDTH) {
-            running = false;
-        }
-        // check if head touches top border
-        if (y[0] < 0) {
-            running = false;
-        }
-        // check if head touches bottom border
-        if (y[0] >= SCREEN_HEIGHT) {
+        // check if head touches left or right or top or bottom border
+        if (x[0] < 0 || x[0] >= SCREEN_WIDTH || y[0] < 0 || y[0] >= SCREEN_HEIGHT) {
             running = false;
         }
     }
 
-    public void gameOver(Graphics g) {
-        // Score
-        g.setColor(Color.red);
-        g.setFont(new Font("Ink Free", Font.BOLD, 75));
-        FontMetrics metrics1 = getFontMetrics(g.getFont());
-        g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics1.stringWidth("Score: " + applesEaten)) / 2, SCREEN_HEIGHT / 2 + 70);
-        // GameOver text
+    private void gameOver(Graphics g) {
+        // Game Over text
         g.setColor(Color.red);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
         FontMetrics metrics2 = getFontMetrics(g.getFont());
-        g.drawString("Game Over", (SCREEN_WIDTH - metrics2.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 2 - 30);
-        // Score
-        g.setColor(Color.red);
+        g.drawString("Game Over",  (SCREEN_WIDTH - metrics2.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 2 - 30);
+        // Score text
+        FontMetrics metrics1 = getFontMetrics(g.getFont());
+        g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics1.stringWidth("Score: " + applesEaten)) / 2, SCREEN_HEIGHT / 2 + 70);
+        // Restart text
         g.setFont(new Font("Ink Free", Font.BOLD, 20));
         FontMetrics metrics3 = getFontMetrics(g.getFont());
         g.drawString("Restart with Space", (SCREEN_WIDTH - metrics3.stringWidth("Restart with Space")) / 2, SCREEN_HEIGHT / 2 + 120);
     }
 
-    public class MyKeyAdapter extends KeyAdapter {
+    private void reset() {
+        bodyParts = 6;
+        applesEaten = 0;
+        direction = 'R';
+        newDirection = 'R';
+        running = true;
+        x = new int[GAME_UNITS];
+        y = new int[GAME_UNITS];
+        newApple();
+    }
+
+    private class MyKeyAdapter extends KeyAdapter {
         @Override
         public void keyPressed(KeyEvent e) {
-
             switch (e.getKeyCode()) {
-                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_LEFT: {
                     if (direction != 'R') {
                         newDirection = 'L';
                     }
                     break;
-                case KeyEvent.VK_RIGHT:
+                }
+                case KeyEvent.VK_RIGHT: {
                     if (direction != 'L') {
                         newDirection = 'R';
                     }
                     break;
-                case KeyEvent.VK_UP:
+                }
+                case KeyEvent.VK_UP: {
                     if (direction != 'D') {
                         newDirection = 'U';
                     }
                     break;
-                case KeyEvent.VK_DOWN:
+                }
+                case KeyEvent.VK_DOWN: {
                     if (direction != 'U') {
                         newDirection = 'D';
                     }
                     break;
-                case KeyEvent.VK_SPACE:
+                }
+                case KeyEvent.VK_SPACE: {
                     if (!running) {
-                        reset();
+                        startGame();
                     }
                     break;
+                }
             }
-        }
-
-        public void reset() {
-            bodyParts = 6;
-            applesEaten = 0;
-            direction = 'R';
-            newDirection = 'R';
-            random = new Random();
-            x = new int[GAME_UNITS];
-            y = new int[GAME_UNITS];
-            running = true;
         }
     }
 }
