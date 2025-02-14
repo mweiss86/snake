@@ -11,6 +11,8 @@ import java.util.concurrent.TimeUnit;
 
 public class GamePanel extends JPanel {
 
+    //TODO maybe Menu, settings, auto speedchange,
+
     static final int SCREEN_WIDTH = 600;
     static final int SCREEN_HEIGHT = 600;
     static final int UNIT_SIZE = 25;
@@ -55,10 +57,10 @@ public class GamePanel extends JPanel {
         running = true;
 
         executor.scheduleAtFixedRate(this::updateGame, 0, UPDATE_INTERVAL, TimeUnit.MILLISECONDS);
-        executor.scheduleAtFixedRate(this::repaint, 0,FRAME_TIME, TimeUnit.MILLISECONDS);
+        executor.scheduleAtFixedRate(this::repaintGame, 0,FRAME_TIME, TimeUnit.MILLISECONDS);
     }
 
-    private void updateGame() {
+    private synchronized void updateGame() {
         if (!running) return;
         move();
         checkApple();
@@ -71,7 +73,7 @@ public class GamePanel extends JPanel {
         draw(g);
     }
 
-    private void draw(Graphics g) {
+    private synchronized void draw(Graphics g) {
         if (running) {
             // Draw apple
             g.setColor(Color.red);
@@ -106,7 +108,7 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void newApple() {
+    private synchronized void newApple() {
         boolean validPosition;
         do {
             validPosition = true;
@@ -122,7 +124,7 @@ public class GamePanel extends JPanel {
         } while (!validPosition); // Keep generating until a valid position is found
     }
 
-    private void move() {
+    private synchronized void move() {
         // Update the new direction at the start of move
         if(direction!=newDirection) {
             direction = newDirection;
@@ -148,7 +150,7 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void checkApple() {
+    private synchronized void checkApple() {
         if (x[0] == appleX && y[0] == appleY) {
             bodyParts++;
             applesEaten++;
@@ -156,7 +158,7 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void checkCollisions() {
+    private synchronized void checkCollisions() {
         // checks if head collide with body
         for (int i = 1; i < bodyParts; i++) {
             if (x[0] == x[i] && y[0] == y[i]) {
@@ -170,7 +172,7 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void gameOver(Graphics g) {
+    private synchronized void gameOver(Graphics g) {
         // Game Over text
         g.setColor(Color.red);
         g.setFont(new Font("Ink Free", Font.BOLD, 75));
@@ -194,6 +196,10 @@ public class GamePanel extends JPanel {
         x = new int[GAME_UNITS];
         y = new int[GAME_UNITS];
         newApple();
+    }
+
+    private synchronized void repaintGame(){
+        repaint();
     }
 
     private class MyKeyAdapter extends KeyAdapter {
