@@ -27,6 +27,9 @@ public class GamePanel extends JPanel {
     static final int FPS = 60;  // Frames per second (rendering speed)
     static final long UPDATE_INTERVAL = 1000 / UPS;        // Time per update in ms
     static final long FRAME_TIME = 1000 / FPS;      // Time per frame in ms
+    int fps = 0;    // Current FPS calue
+    int frameCount = 0;     // Counts frames
+    long lastFpsUpdate = System.currentTimeMillis();
 
     public GamePanel() {
         random = new Random();
@@ -77,9 +80,11 @@ public class GamePanel extends JPanel {
 
     public void draw(Graphics g) {
         if (running) {
+            // Draw apple
             g.setColor(Color.red);
             g.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
 
+            // Draw snake
             for (int i = 0; i < bodyParts; i++) {
                 if (i == 0) {
                     g.setColor(Color.green);
@@ -89,10 +94,24 @@ public class GamePanel extends JPanel {
                     g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
                 }
             }
+            // Draw score
             g.setColor(Color.red);
             g.setFont(new Font("Ink Free", Font.BOLD, 40));
             FontMetrics metrics = getFontMetrics(g.getFont());
             g.drawString("Score: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Score: " + applesEaten)) / 2, g.getFont().getSize());
+
+            // Draw FPS counter
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", Font.PLAIN, 20));
+            g.drawString("FPS :" + fps , 10, 15);       // Display in top-left corner
+
+            // Update FPS tracking
+            frameCount++;
+            if (System.currentTimeMillis() - lastFpsUpdate >= 1000){
+                fps = frameCount;   // Set FPS value
+                frameCount = 0;     // Reset count
+                lastFpsUpdate = System.currentTimeMillis(); // Reset timer
+            }
         } else {
             gameOver(g);
         }
