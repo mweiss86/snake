@@ -4,8 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Random;
 
 
@@ -25,6 +23,10 @@ public class GamePanel extends JPanel {
     char newDirection = 'R';
     boolean running = false;
     Random random;
+    static final int UPS = 10;         //Updates per second (game logic speed) - higher = faster | lower = slower
+    static final int FPS = 60;  // Frames per second (rendering speed)
+    static final long UPDATE_INTERVAL = 1000 / UPS;        // Time per update in ms
+    static final long FRAME_TIME = 1000 / FPS;      // Time per frame in ms
 
     public GamePanel() {
         random = new Random();
@@ -39,17 +41,32 @@ public class GamePanel extends JPanel {
         newApple();
         running = true;
 
-        Instant prev = Instant.now();
-        while (true) {
-            Instant current = Instant.now();
+        long lastUpdate = System.currentTimeMillis();
+        long lastFrame = System.currentTimeMillis();
 
-            if (Duration.between(prev, current).toMillis() > 75) {
+        while (true) {
+            long currentTime = System.currentTimeMillis();
+
+            // Update Game Logic at UPS rate
+            if (currentTime - lastUpdate >= UPDATE_INTERVAL) {
                 move();
                 checkApple();
                 checkCollisions();
-                prev = current;
+                lastUpdate = currentTime;
             }
-            repaint();
+
+            // Render the Game at FPS rate
+            if (currentTime - lastFrame >= FRAME_TIME) {
+                repaint();
+                lastFrame = currentTime;
+            }
+
+            // Sleep tp reduce CPU usage
+            try {
+                Thread.sleep(1);            // Small sleep to prevent 100% CPU usage
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -82,8 +99,20 @@ public class GamePanel extends JPanel {
     }
 
     public void newApple() {
-        appleX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
-        appleY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
+        boolean validPosition;
+        do{
+            validPosition = true;
+            appleX = random.nextInt((SCREEN_WIDTH / UNIT_SIZE)) * UNIT_SIZE;
+            appleY = random.nextInt((SCREEN_HEIGHT / UNIT_SIZE)) * UNIT_SIZE;
+
+            //check if new apple position overlaps with any part of the snake
+            for ( int i = 0; i < bodyParts; i++){
+                if ( x[i] == appleX && y[i] == appleY){
+                    validPosition = false;  // Apple is on the snake, regenerate
+                    break;
+                }
+            }
+        } while (!validPosition);   // Keep generating until a valid position is found
     }
 
     public void move() {
@@ -91,8 +120,8 @@ public class GamePanel extends JPanel {
             x[i] = x[i - 1];
             y[i] = y[i - 1];
         }
-        if(direction!=newDirection){
-            direction=newDirection;
+        if (direction != newDirection) {
+            direction = newDirection;
         }
         switch (direction) {
             case 'U':
@@ -193,8 +222,6 @@ public class GamePanel extends JPanel {
                     }
                     break;
             }
-
-
         }
 
         public void reset() {
