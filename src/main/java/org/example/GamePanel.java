@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.util.Random;
 
 
-//TODO Richtung erst in move aendern
 public class GamePanel extends JPanel {
 
     static final int SCREEN_WIDTH = 600;
@@ -23,6 +22,7 @@ public class GamePanel extends JPanel {
     int appleX;
     int appleY;
     char direction = 'R';
+    char newDirection = 'R';
     boolean running = false;
     Random random;
 
@@ -91,7 +91,9 @@ public class GamePanel extends JPanel {
             x[i] = x[i - 1];
             y[i] = y[i - 1];
         }
-
+        if(direction!=newDirection){
+            direction=newDirection;
+        }
         switch (direction) {
             case 'U':
                 y[0] = y[0] - UNIT_SIZE;
@@ -163,25 +165,26 @@ public class GamePanel extends JPanel {
     public class MyKeyAdapter extends KeyAdapter {
         @Override
         public void keyPressed(KeyEvent e) {
+
             switch (e.getKeyCode()) {
                 case KeyEvent.VK_LEFT:
                     if (direction != 'R') {
-                        direction = 'L';
+                        newDirection = 'L';
                     }
                     break;
                 case KeyEvent.VK_RIGHT:
                     if (direction != 'L') {
-                        direction = 'R';
+                        newDirection = 'R';
                     }
                     break;
                 case KeyEvent.VK_UP:
                     if (direction != 'D') {
-                        direction = 'U';
+                        newDirection = 'U';
                     }
                     break;
                 case KeyEvent.VK_DOWN:
                     if (direction != 'U') {
-                        direction = 'D';
+                        newDirection = 'D';
                     }
                     break;
                 case KeyEvent.VK_SPACE:
@@ -190,12 +193,15 @@ public class GamePanel extends JPanel {
                     }
                     break;
             }
+
+
         }
 
         public void reset() {
             bodyParts = 6;
             applesEaten = 0;
             direction = 'R';
+            newDirection = 'R';
             random = new Random();
             x = new int[GAME_UNITS];
             y = new int[GAME_UNITS];
